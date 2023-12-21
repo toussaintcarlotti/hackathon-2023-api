@@ -9,7 +9,7 @@ class GetGbData
 {
     use AsAction;
 
-    public function handle()
+    public function handle($limit)
     {
         $data = Http::get(config('gb.sections_url'))->json();
         // get sections from the data
@@ -35,9 +35,8 @@ class GetGbData
             }
 
 
-            while (isset($temp['next_page']) && $temp['next_page'] !== "" && $count < 10) {
+            while (isset($temp['next_page']) && $temp['next_page'] !== "" && $count < $limit) {
                 $count++;
-
                 $temp = Http::get($temp['next_page'] . '&local=1')->json();
 
                 if (isset($temp['items'])) {
@@ -48,13 +47,10 @@ class GetGbData
                             $returnData[$item['id']]['summary'] = $item['summary'] ?? $item['leadin'] ?? str($item['content'])->words(150, '...') ?? "";
                         }
                     }
-                    $next_page = $temp['items'][count($temp['items']) - 1]['next_page'] ?? null;
                 }
             }
         }
 
-        // save data as json file
-        // file_put_contents('gb_data.json', json_encode($returnData));
         return $returnData;
     }
 }
