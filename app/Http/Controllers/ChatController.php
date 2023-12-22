@@ -13,7 +13,6 @@ class ChatController extends Controller
         // use session to store the conversation
         if (!$request->session()->has('conversation')) {
             $request->session()->put('conversation', []);
-
         }
 
         $articles = GetBestArticles::run($request->input('message'));
@@ -27,16 +26,16 @@ class ChatController extends Controller
         foreach ($articles as $article) {
             $fullPrompt .= "\n\n" . $article->title . "\n" . $article->summary;
         }
+
         $response = Http::withHeaders(['Authorization' => 'Bearer ' . config('openai.key')])
             ->post('https://api.openai.com/v1/chat/completions', [
-                "model" => "gpt-3.5-turbo",
-                "messages" => array_merge($request->session()->get('conversation'),
+                "model" => "gpt-4",
+                "messages" => array_merge([
                     [
-                        [
-                            'role' => 'system',
-                            'content' => $fullPrompt,
-                        ]
-                    ]),
+                        'role' => 'system',
+                        'content' => $fullPrompt,
+                    ]
+                ], $request->session()->get('conversation')),
             ]);
 
         $request->session()->push('conversation', [
@@ -45,7 +44,7 @@ class ChatController extends Controller
         ]);
 
         return response()->json([
-            'conversation' => $request->session()->get('conversation')
+            'conversation' => $request->session()->get('conversation'),
         ]);
     }
 }
