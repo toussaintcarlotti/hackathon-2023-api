@@ -23,4 +23,6 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::get('gb/sections', GbSectionController::class);
 
-Route::post('chat', ChatController::class);
+Route::post('chat', [ChatController::class, 'store']);
+
+Route::get('chat', [ChatController::class, 'index']);

@@ -8,7 +8,14 @@ use Illuminate\Support\Facades\Http;
 
 class ChatController extends Controller
 {
-    public function __invoke(Request $request)
+    public function index(Request $request)
+    {
+        return response()->json([
+            'conversation' => $request->session()->get('conversation'),
+        ]);
+    }
+
+    public function store(Request $request)
     {
         // use session to store the conversation
         if (!$request->session()->has('conversation')) {
@@ -22,14 +29,15 @@ class ChatController extends Controller
             'role' => 'user',
             'content' => $request->input('message'),
         ]);
-        $fullPrompt = "Tu es un agent conversationnel qui répond a des question. Voici des articles que j'ai trouvé pour répondre au mieux à la question (ils peuvent être inutiles):";
+        $fullPrompt = "Tu es un agent conversationnel qui répond a des question à l'aide de ces informations (réponse rapide):";
         foreach ($articles as $article) {
             $fullPrompt .= "\n\n" . $article->title . "\n" . $article->summary;
         }
 
-        $response = Http::withHeaders(['Authorization' => 'Bearer ' . config('openai.key')])
+
+        $response = Http::timeout(-1)->withHeaders(['Authorization' => 'Bearer ' . config('openai.key')])
             ->post('https://api.openai.com/v1/chat/completions', [
-                "model" => "gpt-4",
+                "model" => "gpt-3.5-turbo-1106",
                 "messages" => array_merge([
                     [
                         'role' => 'system',
